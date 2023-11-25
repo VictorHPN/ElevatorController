@@ -1,0 +1,67 @@
+@@startuml
+
+struct Elevator{
+    id
+    floor
+    state
+    doorsState
+    cabinState
+    position
+    movingDire
+}
+
+struct TXCommand{
+    elevator
+    cmd
+    parameter
+}
+
+class Main{
+    osKernelInitialize()
+    ThreadsInit()
+    TimersInit()
+    QueuesInit()
+    osKernelStart()
+}
+
+class Elevator_RX{
+    RecieveCommand()
+    ParseCommand()
+    SendCommandToManager()
+    InvalidCommandHandler()
+}
+
+class Elevator_Manager{
+    outgoingCMD: TXCommand
+    elevator_1: Elevator
+    elevator_2: Elevator
+    elevator_3: Elevator
+
+    UpdateLocalData()
+    CheckElevatorPosition()
+    SendElevatorCommandForTX()
+}
+
+class Elevator_TX{
+    currentCMD: TXCommand
+    TrasmitCommand()
+    BuildCommand()
+}
+
+Main -down- Elevator_Manager
+Main -left- Elevator_RX
+Main -right- Elevator_TX
+
+Elevator_Manager -- Elevator_RX
+Elevator_Manager -- Elevator_TX
+
+Elevator_Manager -left-> Elevator
+Elevator -right-+ Elevator_Manager
+
+Elevator_Manager -right-> TXCommand
+TXCommand -left-+ Elevator_Manager
+
+Elevator_TX -up-> TXCommand
+TXCommand -down-+ Elevator_TX
+
+@@enduml

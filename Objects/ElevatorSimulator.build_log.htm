@@ -21,7 +21,7 @@ Target DLL:      lmidk-agdi.dll V???
 Dialog DLL:      TCM.DLL V1.56.1.0
  
 <h2>Project:</h2>
-C:\Users\victo\keil_worskpace\Elevator_Simulator\ElevatorSimulator.uvprojx
+C:\Users\victo\keil_worskpace\ElevatorSimulator\ElevatorSimulator.uvprojx
 Project File Date:  11/10/2023
 
 <h2>Output:</h2>
@@ -29,18 +29,18 @@ Project File Date:  11/10/2023
 Rebuild Project 'ElevatorSimulator' - Target 'TM4C123GH6PM'
 assembling startup_TM4C123.s...
 compiling uartstdio.c...
+compiling freertos_evr.c...
+compiling os_systick.c...
 compiling main.c...
 compiling system_TM4C123.c...
-compiling clib_arm.c...
-compiling os_systick.c...
-compiling freertos_evr.c...
+compiling cmsis_os2.c...
 compiling event_groups.c...
 compiling list.c...
-compiling cmsis_os2.c...
 compiling port.c...
+compiling heap_4.c...
 compiling queue.c...
 compiling stream_buffer.c...
-compiling heap_4.c...
+compiling clib_arm.c...
 compiling timers.c...
 compiling tasks.c...
 linking...
@@ -95,47 +95,47 @@ Package Vendor: Keil
       Include file:  CMSIS/RTOS2/FreeRTOS/Config/ARMCM/FreeRTOSConfig.h
 
    * Component: ARM.FreeRTOS::RTOS:Core:Cortex-M:10.5.1
-      Include file:  Source/include/FreeRTOS.h
       Include file:  Source/include/queue.h
       Include file:  Source/include/semphr.h
-      Include file:  Source/include/task.h
-      Source file:   Source/tasks.c
       Source file:   Source/list.c
       Source file:   Source/queue.c
+      Source file:   Source/tasks.c
+      Include file:  Source/include/task.h
       Source file:   Source/portable/RVDS/ARM_CM4F/port.c
+      Include file:  Source/include/FreeRTOS.h
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/freertos_evr.c
 
    * Component: ARM.FreeRTOS::RTOS:Event Groups:10.5.1
-      Source file:   Source/event_groups.c
       Include file:  Source/include/event_groups.h
+      Source file:   Source/event_groups.c
 
    * Component: ARM.FreeRTOS::RTOS:Heap:Heap_4:10.5.1
       Source file:   Source/portable/MemMang/heap_4.c
 
    * Component: ARM.FreeRTOS::RTOS:Message Buffer:10.5.1
-      Include file:  Source/include/message_buffer.h
       Source file:   Source/stream_buffer.c
+      Include file:  Source/include/message_buffer.h
 
    * Component: ARM.FreeRTOS::RTOS:Stream Buffer:10.5.1
       Source file:   Source/stream_buffer.c
       Include file:  Source/include/stream_buffer.h
 
    * Component: ARM.FreeRTOS::RTOS:Timers:10.5.1
-      Include file:  Source/include/timers.h
       Source file:   Source/timers.c
+      Include file:  Source/include/timers.h
 
    * Component: ARM::CMSIS:CORE:5.6.0
 
    * Component: ARM::CMSIS:RTOS2:FreeRTOS:Cortex-M:10.5.1
+      Include file:  CMSIS/RTOS2/FreeRTOS/Include/freertos_mpool.h
+      Source file:   CMSIS/RTOS2/FreeRTOS/Source/cmsis_os2.c
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/ARM/clib_arm.c
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/os_systick.c
-      Source file:   CMSIS/RTOS2/FreeRTOS/Source/cmsis_os2.c
-      Include file:  CMSIS/RTOS2/FreeRTOS/Include/freertos_mpool.h
 
    * Component: Keil::Device:Startup:1.0.1
       Source file:   Device/Source/ARM/startup_TM4C123.s
-      Source file:   Device/Source/system_TM4C123.c
       Include file:  Device/Include/TM4C123/TM4C123.h
+      Source file:   Device/Source/system_TM4C123.c
 Build Time Elapsed:  00:00:06
 </pre>
 </body>

@@ -1,0 +1,108 @@
+@startuml
+
+title Elevator Controller
+
+' state "Elevator_R #red" as Elevator_RX
+
+state Elevator_RX #LightSalmon {
+
+    state "Idle" as rxIdle
+    state "Wait for UART RX channel idle" as waitRXIdle
+    state "Get avaiable bytes" as getBytes
+    state "Identify Command" as identifyCMD : identifyElevator
+    state "Send data to elevator manager" as sendRXData #LightGreen
+    [*] -down-> rxIdle
+    rxIdle -right-> waitRXIdle : UART RX started
+    waitRXIdle -right-> getBytes : UART RX finished
+    getBytes -down-> identifyCMD : UART RX fifo empty
+    identifyCMD -down-> [*] : Could not identify command
+    identifyCMD -left-> sendRXData : Command identified
+    sendRXData -down-> [*]
+}
+
+state Elevator_Manager #LightGreen {
+
+    state "Idle" as mgrIdle
+    state "Send command to Elevator TX" as sendToTX #LightBlue
+    state "Update local data" as updateData
+    state "Send command to elevator" as sendToElevator
+
+    state Elevator_1 #LightCoral {
+        state "Elevator 1 Idle" as e1Idle : Wait for command
+        state "Elevator 1 opening doors" as e1OpenDoors : Entry / Send open doors command
+        state "Elevator 1 closing doors" as e1CloseDoors : Entry / Send close doors command
+        state "Elevator 1 Stopped" as e1Stopped : Entry / Send stop command
+        state "Elevator 1 Moving" as e1Moving : Entry/ Send down or up moving command 
+        e1Moving : Send request altitude command
+
+        [*]          -right-> e1Idle
+        e1Idle       -d-> e1CloseDoors : Button command recieved
+        e1CloseDoors -d-> e1Moving : Doors closed
+        e1Moving     -d-> e1Stopped : Floor reached
+        e1Stopped    -d-> e1OpenDoors : Elevator stopped
+        e1OpenDoors  -u-> e1Idle : Doors opened
+    }
+
+    state Elevator_2 #LightSlateGray {
+        state "Elevator 2 Idle" as e2Idle : Wait for command
+        state "Elevator 2 opening doors" as e2OpenDoors :  Entry / Send open doors command
+        state "Elevator 2 closing doors" as e2CloseDoors : Entry / Send close doors command
+        state "Elevator 2 Stopped" as e2Stopped : Entry / Send stop command
+        state "Elevator 2 Moving" as e2Moving : Entry / Send down or up moving command 
+        e2Moving : Send request altitude command
+
+        [*]          -right-> e2Idle
+        e2Idle       -d-> e2CloseDoors : Button command recieved
+        e2CloseDoors -d-> e2Moving : Doors closed
+        e2Moving     -d-> e2Stopped : Floor reached
+        e2Stopped    -d-> e2OpenDoors : Elevator stopped
+        e2OpenDoors  -u-> e2Idle : Doors opened
+    }
+
+    state Elevator_3 #LightSeaGreen {
+        state "Elevator 3 Idle" as e3Idle : Wait for command
+        state "Elevator 3 opening doors" as e3OpenDoors : Entry / Send open doors command
+        state "Elevator 3 closing doors" as e3CloseDoors : Entry / Send close doors command
+        state "Elevator 3 Stopped" as e3Stopped : Entry / Send stop command
+        state "Elevator 3 Moving" as e3Moving : Entry/ Send down or up moving command 
+        e3Moving : Send request altitude command
+
+        [*]          -right-> e3Idle
+        e3Idle       -d-> e3CloseDoors : Button command recieved
+        e3CloseDoors -d-> e3Moving : Doors closed
+        e3Moving     -d-> e3Stopped : Floor reached
+        e3Stopped    -d-> e3OpenDoors : Elevator stopped
+        e3OpenDoors  -u-> e3Idle : Doors opened
+    }
+
+    [*] -right-> mgrIdle
+    mgrIdle -right-> updateData : Data recieved
+    updateData -right-> sendToElevator : Update finished
+
+    sendToElevator --> Elevator_1
+    sendToElevator --> Elevator_2
+    sendToElevator --> Elevator_3
+
+    Elevator_1 -down-> sendToTX : Command requested
+    Elevator_2 -down-> sendToTX : Command requested
+    Elevator_3 -down-> sendToTX : Command requested
+    sendToTX -down-> [*]
+}
+
+state Elevator_TX #LightBlue {
+
+    state "Idle" as txIdle
+    state "Wrapp data recieved" as wrappData : Build outgoing data package
+    state "Send data to UART TX channel" as sendTXData
+
+    [*] -right-> txIdle
+    txIdle -right-> wrappData : Elevator Manager incoming data
+    wrappData -down-> sendTXData : Data wrapp finished
+    sendTXData -left-> [*]
+}
+
+[*] -down-> Elevator_RX
+Elevator_RX -d-> Elevator_Manager
+Elevator_Manager -d-> Elevator_TX
+
+@enduml
