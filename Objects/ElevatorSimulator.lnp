@@ -1,5 +1,8 @@
 --cpu=Cortex-M4.fp.sp
 ".\objects\main.o"
+".\objects\elevator-rx-drv.o"
+".\objects\elevator-tx-drv.o"
+".\objects\elevator-mgr.o"
 "..\TivaWare_C_Series-2.2.0.295\driverlib\rvmdk\driverlib.lib"
 ".\objects\uartstdio.o"
 ".\objects\clib_arm.o"

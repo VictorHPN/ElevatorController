@@ -1,4 +1,6 @@
 .\objects\main.o: main.c
+.\objects\main.o: Processes/elevator-mgr/include/elevator-mgr.h
+.\objects\main.o: Processes\defs.h
 .\objects\main.o: C:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdio.h
 .\objects\main.o: C:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdlib.h
 .\objects\main.o: C:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdint.h
@@ -24,5 +26,5 @@
 .\objects\main.o: ../TivaWare_C_Series-2.2.0.295/driverlib/adc.h
 .\objects\main.o: C:\Users\victo\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\RTOS2\Include\cmsis_os2.h
 .\objects\main.o: C:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stddef.h
-.\objects\main.o: Processes/elevator-mgr/include/elevator-mgr.h
-.\objects\main.o: Processes\defs.h
+.\objects\main.o: Processes\elevator-rx-drv\include\elevator-rx-drv.h
+.\objects\main.o: Processes\elevator-tx-drv\include\elevator-tx-drv.h
