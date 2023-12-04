@@ -27,8 +27,6 @@ Project File Date:  11/26/2023
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin'
 Rebuild Project 'ElevatorSimulator' - Target 'TM4C123GH6PM'
-compiling uartstdio.c...
-compiling main.c...
 compiling elevator-rx-drv.c...
 C:\Users\victo\keil_worskpace\ElevatorSimulator\Processes\elevator-rx-drv\src\elevator-rx-drv.c(40): warning:  #177-D: variable "msgId"  was declared but never referenced
       msg_id_t msgId;
@@ -36,28 +34,27 @@ C:\Users\victo\keil_worskpace\ElevatorSimulator\Processes\elevator-rx-drv\src\el
   static osMessageQueueId_t local_outgoing_msg_queue = NULL;
 Processes\elevator-rx-drv\src\elevator-rx-drv.c: 2 warnings, 0 errors
 compiling elevator-mgr.c...
+compiling uartstdio.c...
 compiling elevator-tx-drv.c...
-C:\Users\victo\keil_worskpace\ElevatorSimulator\Processes\elevator-tx-drv\src\elevator-tx-drv.c(39): warning:  #177-D: variable "msgId"  was declared but never referenced
-      msg_id_t msgId;
-Processes\elevator-tx-drv\src\elevator-tx-drv.c: 1 warning, 0 errors
 assembling startup_TM4C123.s...
-compiling clib_arm.c...
-compiling freertos_evr.c...
+compiling main.c...
+compiling os_systick.c...
 compiling cmsis_os2.c...
 compiling system_TM4C123.c...
-compiling heap_4.c...
-compiling list.c...
+compiling freertos_evr.c...
 compiling event_groups.c...
+compiling list.c...
+compiling heap_4.c...
 compiling port.c...
-compiling os_systick.c...
 compiling stream_buffer.c...
+compiling clib_arm.c...
 compiling queue.c...
 compiling timers.c...
 compiling tasks.c...
 linking...
-Program Size: Code=12408 RO-data=1532 RW-data=204 ZI-data=12228  
+Program Size: Code=13312 RO-data=1532 RW-data=224 ZI-data=12224  
 FromELF: creating hex file...
-".\Objects\ElevatorSimulator.axf" - 0 Error(s), 3 Warning(s).
+".\Objects\ElevatorSimulator.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -106,41 +103,41 @@ Package Vendor: Keil
       Include file:  CMSIS/RTOS2/FreeRTOS/Config/ARMCM/FreeRTOSConfig.h
 
    * Component: ARM.FreeRTOS::RTOS:Core:Cortex-M:10.5.1
-      Source file:   Source/portable/RVDS/ARM_CM4F/port.c
-      Source file:   Source/list.c
+      Include file:  Source/include/FreeRTOS.h
       Include file:  Source/include/queue.h
       Include file:  Source/include/task.h
-      Source file:   Source/tasks.c
-      Include file:  Source/include/FreeRTOS.h
       Include file:  Source/include/semphr.h
+      Source file:   Source/list.c
       Source file:   Source/queue.c
+      Source file:   Source/tasks.c
+      Source file:   Source/portable/RVDS/ARM_CM4F/port.c
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/freertos_evr.c
 
    * Component: ARM.FreeRTOS::RTOS:Event Groups:10.5.1
-      Source file:   Source/event_groups.c
       Include file:  Source/include/event_groups.h
+      Source file:   Source/event_groups.c
 
    * Component: ARM.FreeRTOS::RTOS:Heap:Heap_4:10.5.1
       Source file:   Source/portable/MemMang/heap_4.c
 
    * Component: ARM.FreeRTOS::RTOS:Message Buffer:10.5.1
-      Source file:   Source/stream_buffer.c
       Include file:  Source/include/message_buffer.h
+      Source file:   Source/stream_buffer.c
 
    * Component: ARM.FreeRTOS::RTOS:Stream Buffer:10.5.1
-      Source file:   Source/stream_buffer.c
       Include file:  Source/include/stream_buffer.h
+      Source file:   Source/stream_buffer.c
 
    * Component: ARM.FreeRTOS::RTOS:Timers:10.5.1
-      Source file:   Source/timers.c
       Include file:  Source/include/timers.h
+      Source file:   Source/timers.c
 
    * Component: ARM::CMSIS:CORE:5.6.0
 
    * Component: ARM::CMSIS:RTOS2:FreeRTOS:Cortex-M:10.5.1
+      Include file:  CMSIS/RTOS2/FreeRTOS/Include/freertos_mpool.h
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/cmsis_os2.c
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/ARM/clib_arm.c
-      Include file:  CMSIS/RTOS2/FreeRTOS/Include/freertos_mpool.h
       Source file:   CMSIS/RTOS2/FreeRTOS/Source/os_systick.c
 
    * Component: Keil::Device:Startup:1.0.1

@@ -115,17 +115,14 @@ typedef enum
     INT_BTT_FLOOR_14_CODE = 'o',     //!< 14° floor internal button code
     INT_BTT_FLOOR_15_CODE = 'p',     //!< 15° floor internal button code
     INT_BTT_NONE = (uint8_t)0xFF
-} int_button_id_t;
+} int_button_id_code_t;
 /**
  * @brief Simulator events identification codes.
  *
  */
 typedef enum
 {
-    GROUND_FLOOR_REACHED = '0', //!< Elevator is at the ground floor
-    FLOOR_1_REACHED = '1',      //!< Elevator is at the 1° floor
-    FLOOR_2_REACHED = '2',      //!< Elevator is at the 2° floor
-    FLOOR_3_REACHED = '3',      //!< Elevator is at the 3° floor
+    FLOOR_REACHED = '0',        //!< Signal recieved when the elevator reachs each floor
     DOORS_OPENED = 'A',         //!< Portas completamente abertas
     DOORS_CLOSED = 'F'          //!< Portas completamente fechadas
 } event_id_t;
@@ -151,6 +148,7 @@ typedef enum
     BTT_FLOOR_13,         //!< 13° floor internal button code
     BTT_FLOOR_14,         //!< 14° floor internal button code
     BTT_FLOOR_15,         //!< 15° floor internal button code
+    NUMBER_OF_BUTTONS,    //!< Number of buttons
     BTT_NONE = (uint8_t)0xFF
 } button_id_t;
 
@@ -187,6 +185,7 @@ typedef struct
     elevator_idx_t elevatorIdx;                //!< Elevator id - used to know to wich elevator the message was sent
     uint32_t position;                         //!< Position report value
     event_id_t eventId;                        //!< Event report identification
+    uint8_t floorReached;                      //!< Floor reached signal
     button_id_t buttonFloor;                   //!< Internal or external button pressed floor
     ext_button_direction_t extButtonDirection; //!< External button direction
 } elevator_mgr_msg_t;

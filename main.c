@@ -205,6 +205,8 @@ int main(void)
     MAP_SysTickEnable();
     // Enable Interrupts
     MAP_IntMasterEnable();
+    // Initializing LEDs:
+    LEDS_INIT();
 
     osKernelInitialize(); // Initialize CMSIS-RTOS
 
@@ -219,9 +221,10 @@ int main(void)
 
     while (1)
     {
+        // INIT ERROR
         GPIOPinWrite(GPIO_PORTF_BASE, RED_LED, 0x0);
-        SysCtlDelay(ROM_SysCtlClockGet() / 6);
+        SysCtlDelay(ROM_SysCtlClockGet() / 10);
         GPIOPinWrite(GPIO_PORTF_BASE, RED_LED, RED_LED);
-        SysCtlDelay(ROM_SysCtlClockGet() / 6);
+        SysCtlDelay(ROM_SysCtlClockGet() / 10);
     }
 }

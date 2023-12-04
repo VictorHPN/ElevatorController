@@ -329,8 +329,9 @@ void ElevatorMgrTask(void *argument)
             case MOVING:
                 CheckButtonPressed(elevator, &incoming_message);
 
-                if (((MOVING_DOWN == elevator->movingSt) && (elevator->position <= elevator->next_floor * 5000)) ||
-                    ((MOVING_UP == elevator->movingSt) && (elevator->position >= elevator->next_floor * 5000)))
+                if ((RX_EVENT_REPORT == msgId) &&
+                    (FLOOR_REACHED == incoming_message.eventId) &&
+                    (elevator->next_floor == incoming_message.floorReached))
                 {
                     ElevatorMgrSendMsgToTX(TX_STOP, elevatorIdx, BTT_NONE);
                     ElevatorMgrSendMsgToTX(TX_TURN_OFF_BUTTON, elevatorIdx, (button_id_t)elevator->next_floor);
@@ -342,11 +343,7 @@ void ElevatorMgrTask(void *argument)
                 }
                 else
                 {
-                    ElevatorMgrSendMsgToTX(TX_REQUEST_POSITION, elevatorIdx, BTT_NONE);
-                }
-                if (RX_POSITION_REPORT == msgId)
-                {
-                    elevator->position = incoming_message.position;
+                    // Nothing to do
                 }
                 break;
             case OPENING_DOORS:
