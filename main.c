@@ -5,6 +5,7 @@
  * @version 0.1
  */
 
+#include "inc/hw_memmap.h"
 #include "elevator-mgr.h"
 #include "elevator-rx-drv.h"
 #include "elevator-tx-drv.h"
@@ -170,6 +171,13 @@ void ConfigureUART(void)
                             UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                                 UART_CONFIG_PAR_NONE);
 
+    // Fifo interruption must be triggered every byte recieved:
+    MAP_UARTFIFOEnable(UART0_BASE);
+    ROM_UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX1_8, UART_FIFO_RX1_8);
+    // Enabling the UART interruption and assigning the callback
+    MAP_UARTIntEnable(UART0_BASE, UART_INT_RT);
+    UARTIntRegister(UART0_BASE, UART0_Handler);
+
     //
     // Configure GPIO Pins for UART mode.
     //
@@ -215,7 +223,7 @@ int main(void)
 
     if (osOK == init_result)
     {
-        MAP_GPIOPinWrite(LEDS_PORT, GREEN_LED, GREEN_LED);
+        MAP_GPIOPinWrite(LEDS_PORT, BLUE_LED, BLUE_LED);
         osKernelStart();
     }
 

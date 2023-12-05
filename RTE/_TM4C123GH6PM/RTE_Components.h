@@ -26,8 +26,6 @@
 #define RTE_RTOS_FreeRTOS_HEAP_4        /* RTOS FreeRTOS Heap 4 */
 /* ARM.FreeRTOS::RTOS:Message Buffer:10.5.1 */
 #define RTE_RTOS_FreeRTOS_MESSAGE_BUFFER /* RTOS FreeRTOS Message Buffers */
-/* ARM.FreeRTOS::RTOS:Stream Buffer:10.5.1 */
-#define RTE_RTOS_FreeRTOS_STREAM_BUFFER /* RTOS FreeRTOS Stream Buffers */
 /* ARM.FreeRTOS::RTOS:Timers:10.5.1 */
 #define RTE_RTOS_FreeRTOS_TIMERS        /* RTOS FreeRTOS Timers */
 /* ARM::CMSIS:RTOS2:FreeRTOS:Cortex-M:10.5.1 */

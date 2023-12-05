@@ -32,6 +32,13 @@ typedef struct
 /* ---------------- Public Functions Prototypes ---------------- */
 
 /**
+ * @brief UART 0 interruption handler.
+ * 
+ * It handles the messages recieved from the elevator simulator.
+ */
+void UART0_Handler(void);
+
+/**
  * @brief Elevator RX initialization process.
  * It initializes the process task, timers, semaphores etc.
  *

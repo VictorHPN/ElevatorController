@@ -514,12 +514,6 @@
           <targetInfo name="TM4C123GH6PM"/>
         </targetInfos>
       </component>
-      <component Cbundle="FreeRTOS" Cclass="RTOS" Cgroup="Stream Buffer" Cvendor="ARM" Cversion="10.5.1" condition="FreeRTOS Stream Buffer">
-        <package name="CMSIS-FreeRTOS" schemaVersion="1.7.7" url="https://www.keil.com/pack/" vendor="ARM" version="10.5.1"/>
-        <targetInfos>
-          <targetInfo name="TM4C123GH6PM"/>
-        </targetInfos>
-      </component>
       <component Cbundle="FreeRTOS" Cclass="RTOS" Cgroup="Timers" Cvendor="ARM" Cversion="10.5.1" condition="FreeRTOS Timers">
         <package name="CMSIS-FreeRTOS" schemaVersion="1.7.7" url="https://www.keil.com/pack/" vendor="ARM" version="10.5.1"/>
         <targetInfos>

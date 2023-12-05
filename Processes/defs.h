@@ -9,7 +9,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 #include "driverlib/debug.h"
@@ -28,7 +27,7 @@
 #include "driverlib/adc.h"
 #include "cmsis_os2.h"
 
-#define DEFAULT_MESSAGE_PUT_TIMEOUT (uint8_t)100 // ms
+#define DEFAULT_MESSAGE_PUT_TIMEOUT (uint8_t)200 // ms
 #define ELEVATOR_FLOOR_NONE (uint8_t)0xFF
 
 /**
@@ -69,10 +68,11 @@ typedef enum
 
 typedef enum
 {
-    LEFT_ELEVATOR_IDX = 0,   //!< Left elevator identifier
-    CENTER_ELEVATOR_IDX = 1, //!< Center elevator identifier
-    RIGHT_ELEVATOR_IDX = 2,  //!< Right elevator identifier
-    NUMBER_OF_ELEVATORS
+    LEFT_ELEVATOR_IDX = 0,      //!< Left elevator identifier
+    CENTER_ELEVATOR_IDX = 1,    //!< Center elevator identifier
+    RIGHT_ELEVATOR_IDX = 2,     //!< Right elevator identifier
+    NUMBER_OF_ELEVATORS,        //!< Number of elevators idxs
+    ELEVATOR_IDX_UNKNWON = 0xFF //!< Unknown elevator idx
 } elevator_idx_t;
 
 /**
@@ -122,9 +122,11 @@ typedef enum
  */
 typedef enum
 {
-    FLOOR_REACHED = '0',        //!< Signal recieved when the elevator reachs each floor
-    DOORS_OPENED = 'A',         //!< Portas completamente abertas
-    DOORS_CLOSED = 'F'          //!< Portas completamente fechadas
+    EVENT_ID_NONE = 0x00,   //!< None Event
+    FLOOR_REACHED = '0',    //!< Signal recieved when the elevator reachs each floor
+    DOORS_OPENED = 'A',     //!< Portas completamente abertas
+    DOORS_CLOSED = 'F',     //!< Portas completamente fechadas
+    EVENT_ID_UNKNOWN = 0xFF //!< Unknown Event
 } event_id_t;
 
 /**
@@ -149,7 +151,7 @@ typedef enum
     BTT_FLOOR_14,         //!< 14° floor internal button code
     BTT_FLOOR_15,         //!< 15° floor internal button code
     NUMBER_OF_BUTTONS,    //!< Number of buttons
-    BTT_NONE = (uint8_t)0xFF
+    BTT_NONE = 0xFF       //!< None Button/floor
 } button_id_t;
 
 /**
@@ -162,7 +164,7 @@ typedef enum
 {
     MOVE_UP_BUTTON = 's',   //!< Move up extenal button code
     MOVE_DOWN_BUTTON = 'd', //!< Move down external button code
-    DIRECTION_NONE = 0xFF
+    DIRECTION_NONE = 0xFF   //!< None direction
 } ext_button_direction_t;
 
 /**
@@ -171,7 +173,7 @@ typedef enum
 typedef enum
 {
     INTERNAL_BUTTON = 'I', //!< Internal button identifier code
-    EXTERNLA_BUTTON = 'E'  //!< External button identifier code
+    EXTERNAL_BUTTON = 'E'  //!< External button identifier code
 } button_id_code_t;
 
 /**
