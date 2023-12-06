@@ -11,6 +11,8 @@
 #include "elevator-mgr.h"
 
 /* -------------------------- Defines -------------------------- */
+#define DOORS_OPERATION_TIMEOUT 7500 // ms
+#define STOP_OPEN_DOORS_TIME 3000    // ms
 
 /* --------------------- Gloval Variables ---------------------- */
 static osThreadId_t local_thread_handle;
@@ -20,23 +22,81 @@ static const osThreadAttr_t local_thread_attr = {
     .stack_size = ELEVATOR_MGR_STACK_SIZE,
 };
 
+static osTimerId_t elevators_doors_timeout_timers[NUMBER_OF_ELEVATORS];
+static const osTimerAttr_t elevators_doors_timeout_timers_attrs[NUMBER_OF_ELEVATORS] = {
+    {.name = "LE_DOORS_TIMEOUT"},
+    {.name = "CE_DOORS_TIMEOUT"},
+    {.name = "RE_DOORS_TIMEOUT"},
+};
+
+static osTimerId_t elevators_stop_open_doors_timers[NUMBER_OF_ELEVATORS];
+static const osTimerAttr_t elevators_stop_open_doors_timers_attrs[NUMBER_OF_ELEVATORS] = {
+    {.name = "LE_STOP_OPEN_DOORS_TIMER"},
+    {.name = "CE_STOP_OPEN_DOORS_TIMER"},
+    {.name = "RE_STOP_OPEN_DOORS_TIMER"},
+};
+
 static ELEVATOR_MGR_HANDLERS_LIST *elevator_mgr_handlers_list = NULL;
 static osMessageQueueId_t local_incoming_msg_queue = NULL;
 static osMessageQueueId_t local_outgoing_msg_queue = NULL;
 
 static elevator_t elevators_list[NUMBER_OF_ELEVATORS];
+static elevator_idx_t elevatorsIdxs[NUMBER_OF_ELEVATORS] = {
+    LEFT_ELEVATOR_IDX,
+    CENTER_ELEVATOR_IDX,
+    RIGHT_ELEVATOR_IDX,
+};
 
 /* --------------- Private Functions Prototypes ---------------- */
+
+/**
+ * @brief Manages the timeout scenario for the door close or open operation.
+ * This timeout callback is invoked when the elevator simulator does not receive an
+ * open or close door command. In such a case, the simulator will not send the
+ * fully open/closed doors event report, so the command needs to be resent.
+ * @param arg argument - elevator idx.
+ */
+void DoorsTimeoutCallback(void *arg);
+
+/**
+ * @brief Starts the doors close or open timeout timer.
+ *
+ * @param elevatorIdx index of the elevator
+ */
+void DoorsTimemoutTimerStart(elevator_idx_t elevatorIdx);
+
+/**
+ * @brief Stops the doors close or open timeout timer.
+ *
+ * @param elevatorIdx index of the elevator
+ */
+void DoorsTimemoutTimerStop(elevator_idx_t elevatorIdx);
+
+/**
+ * @brief Closes the elevetor doors.
+ * This function is the
+ *
+ * @param arg argument - elevator idx.
+ */
+void CloseDoorsAfterStop(void *arg);
+
+/**
+ * @brief Checks if a button was pressed to add a stop.
+ *
+ * @param elevator elevator that will be checked.
+ * @param incoming_message incoming message from uart rx
+ */
+void CheckButtonPressed(elevator_t *elevator, elevator_mgr_msg_t *incoming_message);
 
 /**
  * @brief Adds a floor to the stops list of the elevator
  *
  * @param elevator elevator to add the stop
- * @param new_floor floor of the stop
+ * @param incoming_message incoming message from uart rx
  * @return true if the stop was added
  * @return false if it could not add the stop
  */
-bool ElevatorMgrAddFloorToStop(elevator_t *elevator, uint8_t new_floor);
+bool ElevatorMgrAddFloorToStop(elevator_t *elevator, elevator_mgr_msg_t *incoming_message);
 
 /**
  * @brief Add a stop to the list of up floors to stop
@@ -105,12 +165,65 @@ void ElevatorMgrTask(void *argument);
 
 /* ------------------------------------------------------------- */
 
+void DoorsTimeoutCallback(void *arg)
+{
+    elevator_idx_t *elevatorIdx = (elevator_idx_t *)arg;
+    elevator_t *elevator = &elevators_list[*elevatorIdx];
+
+    if (CLOSING_DOORS == elevator->state)
+    {
+        ElevatorMgrSendMsgToTX(TX_CLOSE_DOORS, *elevatorIdx, BTT_NONE);
+    }
+    else if (OPENING_DOORS == elevator->state)
+    {
+        ElevatorMgrSendMsgToTX(TX_OPEN_DOORS, *elevatorIdx, BTT_NONE);
+    }
+    else
+    {
+        // Nothing to do
+    }
+}
+
+void DoorsTimemoutTimerStart(elevator_idx_t elevatorIdx)
+{
+    osStatus_t timerOperationResult;
+    if (false == osTimerIsRunning(elevators_doors_timeout_timers[elevatorIdx]))
+    {
+        do
+        {
+            timerOperationResult = osTimerStart(elevators_doors_timeout_timers[elevatorIdx],
+                                                DOORS_OPERATION_TIMEOUT);
+        } while (osOK != timerOperationResult);
+    }
+}
+
+void DoorsTimemoutTimerStop(elevator_idx_t elevatorIdx)
+{
+    osStatus_t timerOperationResult;
+    if (true == osTimerIsRunning(elevators_doors_timeout_timers[elevatorIdx]))
+    {
+        do
+        {
+            timerOperationResult = osTimerStop(elevators_doors_timeout_timers[elevatorIdx]);
+        } while (osOK != timerOperationResult);
+    }
+}
+
+void CloseDoorsAfterStop(void *arg)
+{
+    elevator_idx_t *elevatorIdx = (elevator_idx_t *)arg;
+    elevator_t *elevator = &elevators_list[*elevatorIdx];
+
+    ElevatorMgrSendMsgToTX(TX_CLOSE_DOORS, *elevatorIdx, BTT_NONE);
+    elevator->state = CLOSING_DOORS;
+}
+
 void CheckButtonPressed(elevator_t *elevator, elevator_mgr_msg_t *incoming_message)
 {
     if ((RX_INTERNAL_BUTTON == incoming_message->msgId) ||
         (RX_EXTERNAL_BUTTON == incoming_message->msgId))
     {
-        if (true == ElevatorMgrAddFloorToStop(elevator, incoming_message->buttonFloor))
+        if (true == ElevatorMgrAddFloorToStop(elevator, incoming_message))
         {
             if (RX_INTERNAL_BUTTON == incoming_message->msgId)
             {
@@ -122,19 +235,55 @@ void CheckButtonPressed(elevator_t *elevator, elevator_mgr_msg_t *incoming_messa
     }
 }
 
-bool ElevatorMgrAddFloorToStop(elevator_t *elevator, uint8_t new_floor)
+bool ElevatorMgrAddFloorToStop(elevator_t *elevator, elevator_mgr_msg_t *incoming_message)
 {
     bool stop_added = false;
+    uint8_t new_floor = incoming_message->buttonFloor;
 
-    if (15 >= new_floor)
+    if ((15 >= new_floor) &&
+        (new_floor != elevator->next_floor))
     {
-        if (elevator->floor < new_floor)
+        if (RX_EXTERNAL_BUTTON == incoming_message->msgId)
         {
-            stop_added = AddUpFloorStop(elevator, new_floor);
+            if (MOVING_UP == elevator->movingSt)
+            {
+                if ((MOVE_UP_BUTTON == incoming_message->extButtonDirection &&
+                     elevator->floor < new_floor))
+                {
+                    stop_added = AddUpFloorStop(elevator, new_floor);
+                }
+                else
+                {
+                    stop_added = AddDownFloorStop(elevator, new_floor);
+                }
+            }
+            else if (MOVING_DOWN == elevator->movingSt)
+            {
+                if ((MOVE_DOWN_BUTTON == incoming_message->extButtonDirection) &&
+                    elevator->floor >= new_floor)
+                {
+                    stop_added = AddDownFloorStop(elevator, new_floor);
+                }
+                else
+                {
+                    stop_added = AddUpFloorStop(elevator, new_floor);
+                }
+            }
+            else
+            {
+                // Nothing to do
+            }
         }
-        else
+        else // RX_INTERNAL_BUTTON
         {
-            stop_added = AddDownFloorStop(elevator, new_floor);
+            if (elevator->floor < new_floor)
+            {
+                stop_added = AddUpFloorStop(elevator, new_floor);
+            }
+            else
+            {
+                stop_added = AddDownFloorStop(elevator, new_floor);
+            }
         }
     }
 
@@ -144,7 +293,20 @@ bool ElevatorMgrAddFloorToStop(elevator_t *elevator, uint8_t new_floor)
 bool AddUpFloorStop(elevator_t *elevator, uint8_t up_floor)
 {
     bool stop_added = false;
-    if (elevator->upStops < MAX_NUMBER_OFF_STOPS)
+    bool stopRepeated = false;
+
+    // Checks if the new stop is already in the stops list:
+    for (uint8_t stopIxd = 0; stopIxd < elevator->upStops; stopIxd++)
+    {
+        if (up_floor == elevator->upStopFloors[stopIxd])
+        {
+            stopRepeated = true;
+            break;
+        }
+    }
+
+    if ((elevator->upStops < MAX_NUMBER_OFF_STOPS) &&
+        (false == stopRepeated))
     {
         elevator->upStopFloors[elevator->upStops] = up_floor;
         elevator->upStops++;
@@ -156,7 +318,20 @@ bool AddUpFloorStop(elevator_t *elevator, uint8_t up_floor)
 bool AddDownFloorStop(elevator_t *elevator, uint8_t down_floor)
 {
     bool stop_added = false;
-    if (elevator->downStops < MAX_NUMBER_OFF_STOPS)
+    bool stopRepeated = false;
+
+    // Checks if the new stop is already in the stops list:
+    for (uint8_t stopIxd = 0; stopIxd < elevator->downStops; stopIxd++)
+    {
+        if (down_floor == elevator->downStopFloors[stopIxd])
+        {
+            stopRepeated = true;
+            break;
+        }
+    }
+
+    if ((elevator->downStops < MAX_NUMBER_OFF_STOPS) &&
+        (false == stopRepeated))
     {
         elevator->downStopFloors[elevator->downStops] = down_floor;
         elevator->downStops++;
@@ -300,6 +475,8 @@ void ElevatorMgrTask(void *argument)
                         }
                         ElevatorMgrSendMsgToTX(TX_CLOSE_DOORS, elevatorIdx, BTT_NONE);
 
+                        DoorsTimemoutTimerStart(elevatorIdx);
+
                         elevator->state = CLOSING_DOORS;
                     }
                 }
@@ -322,6 +499,8 @@ void ElevatorMgrTask(void *argument)
                     }
                     ElevatorMgrSendMsgToTX(TX_REQUEST_POSITION, elevatorIdx, BTT_NONE);
 
+                    DoorsTimemoutTimerStop(elevatorIdx);
+
                     elevator->doorsSt = CLOSED;
                     elevator->state = MOVING;
                 }
@@ -330,16 +509,20 @@ void ElevatorMgrTask(void *argument)
                 CheckButtonPressed(elevator, &incoming_message);
 
                 if ((RX_EVENT_REPORT == msgId) &&
-                    (FLOOR_REACHED == incoming_message.eventId) &&
-                    (elevator->next_floor == incoming_message.floorReached))
+                    (FLOOR_REACHED == incoming_message.eventId))
                 {
-                    ElevatorMgrSendMsgToTX(TX_STOP, elevatorIdx, BTT_NONE);
-                    ElevatorMgrSendMsgToTX(TX_TURN_OFF_BUTTON, elevatorIdx, (button_id_t)elevator->next_floor);
-                    ElevatorMgrSendMsgToTX(TX_OPEN_DOORS, elevatorIdx, BTT_NONE);
+                    elevator->floor = incoming_message.floorReached;
+                    if (elevator->next_floor == incoming_message.floorReached)
+                    {
+                        ElevatorMgrSendMsgToTX(TX_STOP, elevatorIdx, BTT_NONE);
+                        ElevatorMgrSendMsgToTX(TX_TURN_OFF_BUTTON, elevatorIdx, (button_id_t)elevator->next_floor);
+                        ElevatorMgrSendMsgToTX(TX_OPEN_DOORS, elevatorIdx, BTT_NONE);
 
-                    elevator->floor = elevator->next_floor;
-                    elevator->position = elevator->next_floor * 5000;
-                    elevator->state = OPENING_DOORS;
+                        DoorsTimemoutTimerStart(elevatorIdx);
+
+                        elevator->floor = elevator->next_floor;
+                        elevator->state = OPENING_DOORS;
+                    }
                 }
                 else
                 {
@@ -350,10 +533,13 @@ void ElevatorMgrTask(void *argument)
                 CheckButtonPressed(elevator, &incoming_message);
 
                 if ((RX_EVENT_REPORT == msgId) &&
-                    (DOORS_OPENED == incoming_message.eventId))
+                    (DOORS_OPENED == incoming_message.eventId) &&
+                    false == osTimerIsRunning(elevators_stop_open_doors_timers[elevatorIdx]))
                 {
                     elevator->doorsSt = OPEN;
                     elevator->next_floor = ElevatorMgrGetNextFloor(elevator);
+
+                    DoorsTimemoutTimerStop(elevatorIdx);
 
                     if (ELEVATOR_FLOOR_NONE == elevator->next_floor)
                     {
@@ -361,9 +547,8 @@ void ElevatorMgrTask(void *argument)
                     }
                     else
                     {
-                        osDelay(5000); // Wait 5 seconds to close the elevator door
-                        ElevatorMgrSendMsgToTX(TX_CLOSE_DOORS, elevatorIdx, BTT_NONE);
-                        elevator->state = CLOSING_DOORS;
+                        // Wait 5 seconds to close the elevator door:
+                        osTimerStart(elevators_stop_open_doors_timers[elevatorIdx], STOP_OPEN_DOORS_TIME);
                     }
                 }
                 break;
@@ -389,10 +574,30 @@ osStatus_t ElevatorMgrInit(void *configParams)
     local_incoming_msg_queue = elevator_mgr_handlers_list->incoming_msg_queue;
     local_outgoing_msg_queue = elevator_mgr_handlers_list->outgoing_msg_queue;
 
+    // Timers:
+    for (uint8_t elevatorIdx = 0; elevatorIdx < NUMBER_OF_ELEVATORS; elevatorIdx++)
+    {
+        elevators_doors_timeout_timers[elevatorIdx] = osTimerNew((osTimerFunc_t)DoorsTimeoutCallback,
+                                                                 osTimerPeriodic,
+                                                                 &elevatorsIdxs[elevatorIdx],
+                                                                 &elevators_doors_timeout_timers_attrs[elevatorIdx]);
+
+        elevators_stop_open_doors_timers[elevatorIdx] = osTimerNew((osTimerFunc_t)CloseDoorsAfterStop,
+                                                                   osTimerOnce,
+                                                                   &elevatorsIdxs[elevatorIdx],
+                                                                   &elevators_stop_open_doors_timers_attrs[elevatorIdx]);
+    }
+
     // Task:
     local_thread_handle = osThreadNew((osThreadFunc_t)ElevatorMgrTask, NULL, &local_thread_attr);
 
-    if (NULL == local_thread_handle)
+    if ((NULL == local_thread_handle) ||
+        (NULL == elevators_doors_timeout_timers[LEFT_ELEVATOR_IDX]) ||
+        (NULL == elevators_doors_timeout_timers[CENTER_ELEVATOR_IDX]) ||
+        (NULL == elevators_doors_timeout_timers[RIGHT_ELEVATOR_IDX]) ||
+        (NULL == elevators_stop_open_doors_timers[LEFT_ELEVATOR_IDX]) ||
+        (NULL == elevators_stop_open_doors_timers[CENTER_ELEVATOR_IDX]) ||
+        (NULL == elevators_stop_open_doors_timers[RIGHT_ELEVATOR_IDX]))
     {
         init_result = osError;
     }

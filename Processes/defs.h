@@ -124,8 +124,8 @@ typedef enum
 {
     EVENT_ID_NONE = 0x00,   //!< None Event
     FLOOR_REACHED = '0',    //!< Signal recieved when the elevator reachs each floor
-    DOORS_OPENED = 'A',     //!< Portas completamente abertas
-    DOORS_CLOSED = 'F',     //!< Portas completamente fechadas
+    DOORS_OPENED = 'A',     //!< Doors fully open
+    DOORS_CLOSED = 'F',     //!< Doors fully closed
     EVENT_ID_UNKNOWN = 0xFF //!< Unknown Event
 } event_id_t;
 
