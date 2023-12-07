@@ -110,7 +110,7 @@ void ElevatorTXTask(void *argument)
 
                 if ((CMD_TURN_ON_BUTTON == command) ||
                     (CMD_TURN_OFF_BUTTON == command))
-                { 
+                {
                     // Getting button id code:
                     buttonIdCode = buttons_id_codes[incoming_message.buttonLightId];
                     UARTprintf("%c%c%c\r", elevator_code, command, buttonIdCode);

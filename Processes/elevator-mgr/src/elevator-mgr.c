@@ -89,6 +89,38 @@ void CloseDoorsAfterStop(void *arg);
 void CheckButtonPressed(elevator_t *elevator, elevator_mgr_msg_t *incoming_message);
 
 /**
+ * @brief Swaps the floors. That is used to sort the stops
+ *
+ * @param floorX floor 1 to swap
+ * @param floorY floor 2 to swap
+ */
+void swapFLoor(uint8_t *floorX, uint8_t *floorY);
+
+/**
+ * @brief Sorts the up floors to stop.
+ *
+ * @param elevator elevator to sort the upStops
+ */
+void SortUpStops(elevator_t *elevator);
+
+/**
+ * @brief Sorts the down floors to stop.
+ *
+ * @param elevator elevator to sort the downStops
+ */
+void SortDownStops(elevator_t *elevator);
+
+/**
+ * @brief Verifies if the next floor to stop added is near the current
+ * elevator position. If it is, the elevator should stop at it.
+ *
+ * @param elevator elevator to update the next stop
+ * @param stopDirection direction of the added stop (1 for upStop and anything
+ * different for downStop)
+ */
+void UpdateNextFloorToStop(elevator_t *elevator, uint8_t stopDirection);
+
+/**
  * @brief Adds a floor to the stops list of the elevator
  *
  * @param elevator elevator to add the stop
@@ -311,6 +343,9 @@ bool AddUpFloorStop(elevator_t *elevator, uint8_t up_floor)
         elevator->upStopFloors[elevator->upStops] = up_floor;
         elevator->upStops++;
         stop_added = true;
+
+        // UpdateNextFloorToStop(elevator, 1);
+        SortUpStops(elevator);
     }
     return stop_added;
 }
@@ -336,8 +371,111 @@ bool AddDownFloorStop(elevator_t *elevator, uint8_t down_floor)
         elevator->downStopFloors[elevator->downStops] = down_floor;
         elevator->downStops++;
         stop_added = true;
+
+        // UpdateNextFloorToStop(elevator, 0);
+        SortDownStops(elevator);
     }
     return stop_added;
+}
+
+void UpdateNextFloorToStop(elevator_t *elevator, uint8_t stopDirection)
+{
+    uint8_t currentFloor = elevator->floor;
+    uint8_t currentNextFloor = elevator->next_floor;
+    uint8_t *lastAddedFloor = NULL;
+
+    uint8_t distanceToCurrentNextFloor;
+    uint8_t distanceToNewStopFloor;
+
+    if (currentFloor < currentNextFloor)
+    {
+        distanceToCurrentNextFloor = currentNextFloor - currentFloor;
+    }
+    else
+    {
+        distanceToCurrentNextFloor = currentFloor - currentNextFloor;
+    }
+
+    if ((1 == stopDirection) &&
+        (MOVING_UP == elevator->movingSt)) // stopDirection == 1 -> up stop added
+    {
+        lastAddedFloor = &elevator->upStopFloors[elevator->upStops];
+    }
+    else if ((1 != stopDirection) &&
+             (MOVING_DOWN == elevator->movingSt)) // stopDirection != 1 -> down stop added
+    {
+        lastAddedFloor = &elevator->downStopFloors[elevator->downStops];
+    }
+    else
+    {
+        // Nothing to do
+    }
+
+    if (NULL != lastAddedFloor)
+    {
+        distanceToNewStopFloor = *lastAddedFloor - currentFloor;
+
+        if (distanceToNewStopFloor < distanceToCurrentNextFloor)
+        {
+            elevator->next_floor = *lastAddedFloor;
+            *lastAddedFloor = currentNextFloor;
+        }
+        else
+        {
+            // Nothing to do
+        }
+    }
+    else
+    {
+        // Nothing to do
+    }
+}
+
+void swapFLoor(uint8_t *floorX, uint8_t *floorY)
+{
+    uint8_t temp = *floorX;
+    *floorX = *floorY;
+    *floorY = temp;
+}
+
+void SortUpStops(elevator_t *elevator)
+{
+    uint8_t lowest_floor_idx;
+    for (uint8_t floor_i = 0; floor_i < elevator->upStops - 1; floor_i++)
+    {
+        // Find the lowest floor
+        lowest_floor_idx = floor_i;
+        for (uint8_t floor_j = floor_i + 1; floor_j < elevator->upStops; floor_j++)
+        {
+            if (elevator->upStopFloors[floor_j] < elevator->upStopFloors[lowest_floor_idx])
+            {
+                lowest_floor_idx = floor_j;
+            }
+        }
+
+        // Swap the found lowest floor
+        swapFLoor(&elevator->upStopFloors[lowest_floor_idx], &elevator->upStopFloors[floor_i]);
+    }
+}
+
+void SortDownStops(elevator_t *elevator)
+{
+    uint8_t highest_floor_idx;
+    for (uint8_t floor_i = 0; floor_i < elevator->downStops - 1; floor_i++)
+    {
+        // Find the lowest floor
+        highest_floor_idx = floor_i;
+        for (uint8_t floor_j = floor_i + 1; floor_j < elevator->downStops; floor_j++)
+        {
+            if (elevator->downStopFloors[floor_j] > elevator->downStopFloors[highest_floor_idx])
+            {
+                highest_floor_idx = floor_j;
+            }
+        }
+
+        // Swap the found lowest floor
+        swapFLoor(&elevator->downStopFloors[highest_floor_idx], &elevator->downStopFloors[floor_i]);
+    }
 }
 
 uint8_t ElevatorMgrGetNextFloor(elevator_t *elevator)

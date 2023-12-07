@@ -14,8 +14,8 @@
 
 #define ELEVATOR_MGR_TASK_NAME "ELEVATOR_MGR"
 #define ELEVATOR_MGR_TASK_PRIORITY osPriorityNormal
-#define ELEVATOR_MGR_STACK_SIZE (uint16_t)(512 * 2)
-#define ELEVATOR_MGR_QUEUE_LENGTH (uint8_t)10
+#define ELEVATOR_MGR_STACK_SIZE (uint16_t)(512 * 4)
+#define ELEVATOR_MGR_QUEUE_LENGTH (uint8_t)30
 
 #define MAX_NUMBER_OFF_STOPS (uint8_t)5
 /* -------------------------- Enums ---------------------------- */

@@ -14,11 +14,10 @@
 
 #define ELEVATOR_TX_TASK_NAME "ELEVATOR_TX"
 #define ELEVATOR_TX_TASK_PRIORITY osPriorityNormal
-#define ELEVATOR_TX_STACK_SIZE (uint16_t)512
-#define ELEVATOR_TX_QUEUE_LENGTH (uint8_t)10
+#define ELEVATOR_TX_STACK_SIZE (uint16_t)512*2
+#define ELEVATOR_TX_QUEUE_LENGTH (uint8_t)20
 
 /* -------------------------- Enums ---------------------------- */
-
 
 /* ------------------------- Structs --------------------------- */
 
