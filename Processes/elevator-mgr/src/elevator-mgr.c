@@ -344,7 +344,7 @@ bool AddUpFloorStop(elevator_t *elevator, uint8_t up_floor)
         elevator->upStops++;
         stop_added = true;
 
-        // UpdateNextFloorToStop(elevator, 1);
+        UpdateNextFloorToStop(elevator, 1);
         SortUpStops(elevator);
     }
     return stop_added;
@@ -372,7 +372,7 @@ bool AddDownFloorStop(elevator_t *elevator, uint8_t down_floor)
         elevator->downStops++;
         stop_added = true;
 
-        // UpdateNextFloorToStop(elevator, 0);
+        UpdateNextFloorToStop(elevator, 0);
         SortDownStops(elevator);
     }
     return stop_added;
@@ -380,54 +380,47 @@ bool AddDownFloorStop(elevator_t *elevator, uint8_t down_floor)
 
 void UpdateNextFloorToStop(elevator_t *elevator, uint8_t stopDirection)
 {
-    uint8_t currentFloor = elevator->floor;
     uint8_t currentNextFloor = elevator->next_floor;
     uint8_t *lastAddedFloor = NULL;
 
-    uint8_t distanceToCurrentNextFloor;
-    uint8_t distanceToNewStopFloor;
-
-    if (currentFloor < currentNextFloor)
+    if (MOVING == elevator->state)
     {
-        distanceToCurrentNextFloor = currentNextFloor - currentFloor;
-    }
-    else
-    {
-        distanceToCurrentNextFloor = currentFloor - currentNextFloor;
-    }
-
-    if ((1 == stopDirection) &&
-        (MOVING_UP == elevator->movingSt)) // stopDirection == 1 -> up stop added
-    {
-        lastAddedFloor = &elevator->upStopFloors[elevator->upStops];
-    }
-    else if ((1 != stopDirection) &&
-             (MOVING_DOWN == elevator->movingSt)) // stopDirection != 1 -> down stop added
-    {
-        lastAddedFloor = &elevator->downStopFloors[elevator->downStops];
-    }
-    else
-    {
-        // Nothing to do
-    }
-
-    if (NULL != lastAddedFloor)
-    {
-        distanceToNewStopFloor = *lastAddedFloor - currentFloor;
-
-        if (distanceToNewStopFloor < distanceToCurrentNextFloor)
+        if ((1 == stopDirection) &&
+            (MOVING_UP == elevator->movingSt))
         {
-            elevator->next_floor = *lastAddedFloor;
-            *lastAddedFloor = currentNextFloor;
+            lastAddedFloor = &elevator->upStopFloors[elevator->upStops - 1];
+            if (*lastAddedFloor < currentNextFloor)
+            {
+                elevator->next_floor = *lastAddedFloor;
+                *lastAddedFloor = currentNextFloor;
+            }
+            else
+            {
+                // Nothing to
+            }
+        }
+        else if ((1 != stopDirection) &&
+                 (MOVING_DOWN == elevator->movingSt))
+        {
+            lastAddedFloor = &elevator->downStopFloors[elevator->downStops - 1];
+            if (*lastAddedFloor > currentNextFloor)
+            {
+                elevator->next_floor = *lastAddedFloor;
+                *lastAddedFloor = currentNextFloor;
+            }
+            else
+            {
+                // Nothing to
+            }
         }
         else
         {
-            // Nothing to do
+            // Nothing to
         }
     }
     else
     {
-        // Nothing to do
+        // Nothing to
     }
 }
 

@@ -1,13 +1,16 @@
 @@startuml
 
 struct Elevator{
-    id
-    floor
     state
-    doorsState
-    cabinState
+    floor
     position
-    movingDire
+    next_floor
+    upStopFloors
+    downStopFloors
+    upStops
+    downStops
+    movingSt
+    doorsSt
 }
 
 struct TXCommand{
@@ -28,7 +31,6 @@ class Elevator_RX{
     RecieveCommand()
     ParseCommand()
     SendCommandToManager()
-    InvalidCommandHandler()
 }
 
 class Elevator_Manager{

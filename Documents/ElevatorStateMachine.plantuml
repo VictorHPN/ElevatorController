@@ -15,9 +15,9 @@ state Elevator_RX #LightSalmon {
     rxIdle -right-> waitRXIdle : UART RX started
     waitRXIdle -right-> getBytes : UART RX finished
     getBytes -down-> identifyCMD : UART RX fifo empty
-    identifyCMD -down-> [*] : Could not identify command
+    identifyCMD -left-> rxIdle : Could not identify command
     identifyCMD -left-> sendRXData : Command identified
-    sendRXData -down-> [*]
+    sendRXData -up-> rxIdle
 }
 
 state Elevator_Manager #LightGreen {
@@ -32,8 +32,7 @@ state Elevator_Manager #LightGreen {
         state "Elevator 1 opening doors" as e1OpenDoors : Entry / Send open doors command
         state "Elevator 1 closing doors" as e1CloseDoors : Entry / Send close doors command
         state "Elevator 1 Stopped" as e1Stopped : Entry / Send stop command
-        state "Elevator 1 Moving" as e1Moving : Entry/ Send down or up moving command 
-        e1Moving : Send request altitude command
+        state "Elevator 1 Moving" as e1Moving : Entry/ Send down or up moving command
 
         [*]          -right-> e1Idle
         e1Idle       -d-> e1CloseDoors : Button command recieved
@@ -48,8 +47,7 @@ state Elevator_Manager #LightGreen {
         state "Elevator 2 opening doors" as e2OpenDoors :  Entry / Send open doors command
         state "Elevator 2 closing doors" as e2CloseDoors : Entry / Send close doors command
         state "Elevator 2 Stopped" as e2Stopped : Entry / Send stop command
-        state "Elevator 2 Moving" as e2Moving : Entry / Send down or up moving command 
-        e2Moving : Send request altitude command
+        state "Elevator 2 Moving" as e2Moving : Entry / Send down or up moving command
 
         [*]          -right-> e2Idle
         e2Idle       -d-> e2CloseDoors : Button command recieved
@@ -64,8 +62,7 @@ state Elevator_Manager #LightGreen {
         state "Elevator 3 opening doors" as e3OpenDoors : Entry / Send open doors command
         state "Elevator 3 closing doors" as e3CloseDoors : Entry / Send close doors command
         state "Elevator 3 Stopped" as e3Stopped : Entry / Send stop command
-        state "Elevator 3 Moving" as e3Moving : Entry/ Send down or up moving command 
-        e3Moving : Send request altitude command
+        state "Elevator 3 Moving" as e3Moving : Entry/ Send down or up moving command
 
         [*]          -right-> e3Idle
         e3Idle       -d-> e3CloseDoors : Button command recieved
@@ -86,7 +83,7 @@ state Elevator_Manager #LightGreen {
     Elevator_1 -down-> sendToTX : Command requested
     Elevator_2 -down-> sendToTX : Command requested
     Elevator_3 -down-> sendToTX : Command requested
-    sendToTX -down-> [*]
+    sendToTX -up-> mgrIdle
 }
 
 state Elevator_TX #LightBlue {
@@ -98,7 +95,7 @@ state Elevator_TX #LightBlue {
     [*] -right-> txIdle
     txIdle -right-> wrappData : Elevator Manager incoming data
     wrappData -down-> sendTXData : Data wrapp finished
-    sendTXData -left-> [*]
+    sendTXData -left-> txIdle
 }
 
 [*] -down-> Elevator_RX
